@@ -29,6 +29,38 @@ pub async fn mpsc_server(num_clients: u32) {
 }
 
 #[tokio::main]
+pub async fn tokio_mpsc_server(num_clients: u32) {
+    use tokio::sync::mpsc;
+
+    let (sender, mut receiver) = mpsc::channel(128);
+
+    for i in 0..num_clients {
+        let sender = sender.clone();
+        tokio::spawn(async move {
+            loop {
+                sender.send(format!("Hello from client {}", i)).await.unwrap();
+            }
+        });
+    }
+
+    {
+        let timer = std::time::Instant::now();
+
+        let mut count = 0;
+        loop {
+            if let Some(_) = receiver.recv().await {
+                count += 1;
+                if count % 10000000 == 0 {
+                    let elapsed = timer.elapsed();
+                    println!("tokio_mpsc - Received {} messages in {:?}", count, elapsed);
+                    // break;
+                }
+            }
+        }
+    }
+}
+
+#[tokio::main]
 pub async fn lfqueue_server(num_clients: u32) {
     // use lockfree::queue::Queue;
     use crossbeam::queue::SegQueue as Queue;
