@@ -1,22 +1,7 @@
-use rust_lab::mpsc_server;
-// use rust_lab::lfqueue_server;
+// use rust_lab::arc_read;
+use rust_lab::static_read;
 
 fn main() {
-    let num_clients = 10;
-
-    mpsc_server(num_clients);
-    // lfqueue_server(num_clients);
-    
-    // {
-        // use std::thread;
-        // let mpsc_handle = thread::spawn(move || {
-        //     mpsc_server(num_clients);
-        // });
-        // let lfqueue_handle = thread::spawn(move || {
-        //     lfqueue_server(num_clients);
-        // });
-
-        // mpsc_handle.join().unwrap();
-        // lfqueue_handle.join().unwrap();
-    // }
+    // arc_read(10);
+    static_read(10);
 }

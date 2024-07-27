@@ -1,78 +1,81 @@
 #[tokio::main]
-pub async fn mpsc_server(num_clients: u32) {
-    use std::sync::mpsc;
+pub async fn arc_read(num_clients: u32) {
+    use std::sync::{Arc, mpsc};
 
-    let (sender, receiver) = mpsc::channel::<String>();
+    let data = Arc::new(String::from("Hello, World!"));
+    let (tx, rx) = mpsc::channel();
 
-    for i in 0..num_clients {
-        let sender = sender.clone();
+    for _ in 0..num_clients {
+        let data = data.clone();
+        let tx = tx.clone();
         tokio::spawn(async move {
             loop {
-                sender.send(format!("Hello from client {}", i)).unwrap();
+                let _ = data.len();
+                tx.send("Hello").unwrap();
             }
         });
     }
 
     {
         let timer = std::time::Instant::now();
-
-        let mut count = 0;
-        for _ in receiver {
-            count += 1;
-            if count % 10000000 == 0 {
-                let elapsed = timer.elapsed();
-                println!("mpsc - Received {} messages in {:?}", count, elapsed);
-                // break;
+        let mut cnt = 0;
+        for _ in rx {
+            cnt += 1;
+            if cnt % 1000000 == 0 {
+                println!("cnt: {}", cnt);
+                println!("time: {:?}", timer.elapsed());
+                break;
             }
         }
     }
 }
+
 
 #[tokio::main]
-pub async fn lfqueue_server(num_clients: u32) {
-    // use lockfree::queue::Queue;
-    use crossbeam::queue::SegQueue as Queue;
-    use std::sync::Arc;
+pub async fn static_read(num_clients: u32) {
+    use std::sync::mpsc;
 
-    let queue: Arc<Queue<String>> = Arc::new(Queue::new());
+    static mut DATA: &str = "Hello, World!";
+    let (tx, rx) = mpsc::channel();
 
-    for i in 0..num_clients {
-        let queue = queue.clone();
+    for _ in 0..num_clients {
+        let tx = tx.clone();
         tokio::spawn(async move {
             loop {
-                queue.push(format!("Hello from client {}", i));
+                unsafe {
+                    let _ = DATA.len();
+                    tx.send("Hello").unwrap();
+                }
             }
         });
     }
 
     {
         let timer = std::time::Instant::now();
-
-        let mut count = 0;
-        loop {
-            if let Some(_) = queue.pop() {
-                count += 1;
-                if count % 10000000 == 0 {
-                    let elapsed = timer.elapsed();
-                    println!("lfqueue - Received {} messages in {:?}", count, elapsed);
-                    // break;
-                }
+        let mut cnt = 0;
+        for _ in rx {
+            cnt += 1;
+            if cnt % 1000000 == 0 {
+                println!("cnt: {}", cnt);
+                println!("time: {:?}", timer.elapsed());
+                break;
             }
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn mpsc_test() {
-        mpsc_server(10);
+    fn arc_test() {
+        arc_read(10);
     }
 
     #[test]
-    fn lfqueue_test() {
-        lfqueue_server(10);
+    fn static_test() {
+        // static_test(10);
     }
 }
