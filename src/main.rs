@@ -3,7 +3,7 @@ use rust_lab::tokio_mpsc_server;
 // use rust_lab::lfqueue_server;
 
 fn main() {
-    let num_clients = 100;
+    let num_clients = 10;
 
     // mpsc_server(num_clients);
     tokio_mpsc_server(num_clients);

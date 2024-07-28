@@ -32,13 +32,13 @@ pub async fn mpsc_server(num_clients: u32) {
 pub async fn tokio_mpsc_server(num_clients: u32) {
     use tokio::sync::mpsc;
 
-    let (sender, mut receiver) = mpsc::channel(128);
+    let (sender, mut receiver) = mpsc::unbounded_channel();
 
     for i in 0..num_clients {
         let sender = sender.clone();
         tokio::spawn(async move {
             loop {
-                sender.send(format!("Hello from client {}", i)).await.unwrap();
+                sender.send(format!("Hello from client {}", i)).unwrap();
             }
         });
     }
