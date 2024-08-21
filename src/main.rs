@@ -12,7 +12,7 @@ impl Packet {
     }
 
     fn as_bytes(&self) -> Vec<u8> {
-        let mut bytes = bincode::serialize(&self.size).unwrap();
+        let mut bytes = bytemuck::bytes_of(&self.size).to_vec();
         bytes.extend_from_slice(&self.data);
         bytes
     }
