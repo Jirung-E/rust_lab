@@ -1,16 +1,15 @@
-use bytemuck::{Zeroable, NoUninit};
-
 #[repr(u8)]
-#[derive(Copy, Clone, Zeroable, NoUninit)]
+#[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::NoUninit)]
 enum PacketType {
     Raw = 0,
     Move,
     Update,
 }
 
+type PacketSize = u16;
 
 struct Packet {
-    size: u16,
+    size: PacketSize,
     packet_type: PacketType,
     data: Vec<u8>,
 }
@@ -18,8 +17,8 @@ struct Packet {
 impl Packet {
     fn new(data: &[u8]) -> Self {
         Self {
-            size: data.len() as u16 + 2,
-            packet_type: PacketType::Update,
+            size: (data.len() + std::mem::size_of::<PacketSize>()) as PacketSize,
+            packet_type: PacketType::Raw,
             data: data.to_vec(),
         }
     }
@@ -42,7 +41,7 @@ fn main() {
     }
     println!("{:?}", start.elapsed());  // 266 ms
     println!("{:?}", packet.as_bytes());
-    // [18, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    // [18, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     // u16, data
     // little endian
 }
