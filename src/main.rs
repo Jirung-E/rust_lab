@@ -1,5 +1,17 @@
+use bytemuck::{Zeroable, NoUninit};
+
+#[repr(u8)]
+#[derive(Copy, Clone, Zeroable, NoUninit)]
+enum PacketType {
+    Raw = 0,
+    Move,
+    Update,
+}
+
+
 struct Packet {
     size: u16,
+    packet_type: PacketType,
     data: Vec<u8>,
 }
 
@@ -7,13 +19,14 @@ impl Packet {
     fn new(data: &[u8]) -> Self {
         Self {
             size: data.len() as u16 + 2,
+            packet_type: PacketType::Update,
             data: data.to_vec(),
         }
     }
 
     fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = bytemuck::bytes_of(&self.size).to_vec();
-        // let mut bytes = bincode::serialize(&self.size).unwrap();
+        bytes.extend_from_slice(bytemuck::bytes_of(&self.packet_type));
         bytes.extend_from_slice(&self.data);
         bytes
     }
