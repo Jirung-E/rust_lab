@@ -1,24 +1,16 @@
-// use rust_lab::mpsc_server;
-use rust_lab::tokio_mpsc_server;
-// use rust_lab::lfqueue_server;
-
 fn main() {
-    let num_clients = 10;
+    let s1 = b"hello ";
+    let s2 = b"world";
+    println!("{:?}", s1);
+    println!("{:?}", s2);
 
-    // mpsc_server(num_clients);
-    tokio_mpsc_server(num_clients);
-    // lfqueue_server(num_clients);
-    
-    // {
-        // use std::thread;
-        // let mpsc_handle = thread::spawn(move || {
-        //     mpsc_server(num_clients);
-        // });
-        // let lfqueue_handle = thread::spawn(move || {
-        //     lfqueue_server(num_clients);
-        // });
+    let concat = [s1.to_vec(), s2.to_vec()].concat();
+    println!("{:?}", concat);
 
-        // mpsc_handle.join().unwrap();
-        // lfqueue_handle.join().unwrap();
-    // }
+    let mut v1 = s1.to_vec();
+    v1.extend_from_slice(s2);
+    println!("{:?}", v1);
+
+    let v2: Vec<_> = s1.iter().chain(s2.iter()).collect();
+    println!("{:?}", v2);
 }
