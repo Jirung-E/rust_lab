@@ -1,16 +1,18 @@
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Packet {
+    size: u16,
+    data: Vec<u8>,
+}
+
+
 fn main() {
-    let s1 = b"hello ";
-    let s2 = b"world";
-    println!("{:?}", s1);
-    println!("{:?}", s2);
+    let packet = Packet {
+        size: 16,
+        data: (0..16).collect(),
+    };
 
-    let concat = [s1.to_vec(), s2.to_vec()].concat();
-    println!("{:?}", concat);
-
-    let mut v1 = s1.to_vec();
-    v1.extend_from_slice(s2);
-    println!("{:?}", v1);
-
-    let v2: Vec<_> = s1.iter().chain(s2.iter()).collect();
-    println!("{:?}", v2);
+    println!("{:?}", bincode::serialize(&packet).unwrap());
+    // [16, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    // u16, u64(usize), data
+    // little endian
 }
