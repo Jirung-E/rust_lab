@@ -46,6 +46,26 @@ impl Packet {
         }
     }
 
+    fn from_bytes(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() < size_of::<PacketHeader>() {
+            return None;
+        }
+
+        let header = PacketHeader {
+            size: PacketSize::from_be_bytes(bytes[..size_of::<PacketSize>()].try_into().unwrap()),
+            packet_type: PacketType(bytes[2]),
+        };
+
+        if bytes.len() < header.size as usize {
+            return None;
+        }
+
+        Some(Self {
+            header,
+            data: bytes[size_of::<PacketHeader>()..].to_vec(),
+        })
+    }
+
     fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.header.size as usize);
         bytes.extend_from_slice(&self.header.to_be_bytes());
@@ -58,13 +78,21 @@ impl Packet {
 fn main() {
     let packet = Packet::new(&(0..16).collect::<Vec<u8>>());
 
+    let bytes = packet.as_bytes();
+    println!("{:?}", bytes);
+    // [0, 18, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    // u16, type, data
+    // big-endian
+
     let start = std::time::Instant::now();
     for _ in 0..1_000_000 {
         packet.as_bytes();
     }
     println!("{:?}", start.elapsed());  // 250 ms
-    println!("{:?}", packet.as_bytes());
-    // [0, 18, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    // u16, type, data
-    // big-endian
+
+    let start = std::time::Instant::now();
+    for _ in 0..1_000_000 {
+        Packet::from_bytes(&bytes).unwrap();
+    }
+    println!("{:?}", start.elapsed());  // 1.5 s
 }
