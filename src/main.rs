@@ -1,9 +1,12 @@
-#[repr(u8)]
-#[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::NoUninit)]
-enum PacketType {
-    Raw = 0,
-    Move,
-    Update,
+struct PacketType(u8);
+impl PacketType{
+    const RAW: Self = Self(0);
+    const MOVE: Self = Self(1);
+    const UPDATE: Self = Self(2);
+
+    fn to_be_bytes(&self) -> [u8; 1] {      // size_of::<PacketType>()
+        self.0.to_be_bytes()
+    }
 }
 
 type PacketSize = u16;
@@ -18,14 +21,15 @@ impl Packet {
     fn new(data: &[u8]) -> Self {
         Self {
             size: (data.len() + std::mem::size_of::<PacketSize>()) as PacketSize,
-            packet_type: PacketType::Raw,
+            packet_type: PacketType::RAW,
             data: data.to_vec(),
         }
     }
 
     fn as_bytes(&self) -> Vec<u8> {
-        let mut bytes = bytemuck::bytes_of(&self.size).to_vec();
-        bytes.extend_from_slice(bytemuck::bytes_of(&self.packet_type));
+        let mut bytes = Vec::with_capacity(self.size as usize);
+        bytes.extend_from_slice(&self.size.to_be_bytes());
+        bytes.extend_from_slice(&self.packet_type.to_be_bytes());
         bytes.extend_from_slice(&self.data);
         bytes
     }
@@ -41,7 +45,7 @@ fn main() {
     }
     println!("{:?}", start.elapsed());  // 266 ms
     println!("{:?}", packet.as_bytes());
-    // [18, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    // u16, data
-    // little endian
+    // [0, 18, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    // u16, type, data
+    // big-endian
 }
