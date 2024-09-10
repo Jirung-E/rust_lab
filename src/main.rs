@@ -22,3 +22,5 @@ fn main() {
 
 // bytemuck: 900ms, 150ms
 // be_bytes: 3.0s, 2.2s
+// bincode option건드려서? -> 6.8s, 6.8s
+// bytemuck 으로 변환 하고 나서 reverse? 5.2s

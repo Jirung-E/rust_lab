@@ -2,7 +2,7 @@ use bytemuck::{Pod, Zeroable};
 
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Pod, Zeroable)]
+#[derive(Debug, PartialEq, Clone, Copy, Pod, Zeroable)]
 pub struct Player {
     pub id: u32,
     pub translation: gmm::Float3, 
@@ -29,42 +29,22 @@ impl Player {
     }
     
     pub fn as_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(std::mem::size_of::<Player>());
-        bytes.extend_from_slice(&self.id.to_be_bytes());
-        bytes.extend_from_slice(&self.translation.x.to_be_bytes());
-        bytes.extend_from_slice(&self.translation.y.to_be_bytes());
-        bytes.extend_from_slice(&self.translation.z.to_be_bytes());
-        bytes.extend_from_slice(&self.rotation.x.to_be_bytes());
-        bytes.extend_from_slice(&self.rotation.y.to_be_bytes());
-        bytes.extend_from_slice(&self.rotation.z.to_be_bytes());
-        bytes.extend_from_slice(&self.rotation.w.to_be_bytes());
-        bytes.extend_from_slice(&self.anim_index.to_be_bytes());
-        bytes.extend_from_slice(&self.anim_timer.to_be_bytes());
+        let mut bytes = bytemuck::bytes_of(self).to_vec();
+        bytes[0..4].reverse();
+        bytes[4..8].reverse();
+        bytes[8..12].reverse();
+        bytes[12..16].reverse();
+        bytes[16..20].reverse();
+        bytes[20..24].reverse();
+        bytes[24..28].reverse();
+        bytes[28..32].reverse();
+        bytes[32..36].reverse();
+        bytes[36..40].reverse();
         bytes
     }
 
     pub fn from_bytes(data: &[u8]) -> Player {
-        let id = u32::from_be_bytes(data[0..4].try_into().unwrap());
-        let translation = gmm::Float3::new(
-            f32::from_be_bytes(data[4..8].try_into().unwrap()),
-            f32::from_be_bytes(data[8..12].try_into().unwrap()),
-            f32::from_be_bytes(data[12..16].try_into().unwrap()),
-        );
-        let rotation = gmm::Float4::new(
-            f32::from_be_bytes(data[16..20].try_into().unwrap()),
-            f32::from_be_bytes(data[20..24].try_into().unwrap()),
-            f32::from_be_bytes(data[24..28].try_into().unwrap()),
-            f32::from_be_bytes(data[28..32].try_into().unwrap()),
-        );
-        let anim_index = u32::from_be_bytes(data[32..36].try_into().unwrap());
-        let anim_timer = f32::from_be_bytes(data[36..40].try_into().unwrap());
-        Player {
-            id, 
-            translation, 
-            rotation, 
-            anim_index, 
-            anim_timer, 
-        }
+        *bytemuck::from_bytes(data)
     }
 }
 
