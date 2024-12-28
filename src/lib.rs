@@ -1,28 +1,37 @@
 use futures::future::join_all;
 
-#[tokio::main]
-pub async fn listener_accept_test() {
-    let h1 = tokio::spawn(async {
-        let start = tokio::time::Instant::now();
 
-        for _ in 0..1000000 {
-            let _result = random_calc(5, 2);
-        }
+async fn join_test() {
+    let start = std::time::Instant::now();
 
-        println!("Time elapsed: {:?}", start.elapsed());
-    });
+    let handles = (0..100).map(|n| {
+        let n = n + 1;
+        tokio::spawn(async move {
+            for _ in 0..1000000 {
+                let _result = random_calc(5, 2);
+            }
 
-    let h2 = tokio::spawn(async {
-        let start = tokio::time::Instant::now();
-
-        for _ in 0..1000000 {
-            let _result = random_calc(5, 2);
-        }
-
-        println!("Time elapsed: {:?}", start.elapsed());
+            println!("n: {} \t thread: {:?}", n, std::thread::current().id());
+        })
     });
     
-    join_all([h1, h2]).await;
+    join_all(handles).await;
+    // for handle in handles {
+    //     handle.await.unwrap();
+    // }
+
+    println!("Time elapsed: {:?}", start.elapsed());
+}
+
+pub fn listener_accept_test() {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1000)
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            join_test().await;
+        });
 }
 
 
