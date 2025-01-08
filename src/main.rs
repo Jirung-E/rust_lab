@@ -1,10 +1,7 @@
 fn main() {
     let v = (0..50)
-        .map(|x| 
+        .flat_map(|x| 
             (0..50).map(move |y| (x, y)).collect::<Vec<_>>()
         ).collect::<Vec<_>>();
-    println!("{:?}", v);
-    
-    let v = v.iter().flatten().collect::<Vec<_>>();
     println!("{:?}", v);
 }
